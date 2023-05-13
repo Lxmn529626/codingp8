@@ -12,7 +12,7 @@ const initializeDBandServer = async () => {
       filename: dbpath,
       driver: sqlite3.Database,
     });
-    app.listen(30000, () => {
+    app.listen(3000, () => {
       console.log("Server is running at 3000");
     });
   } catch (e) {
@@ -21,14 +21,6 @@ const initializeDBandServer = async () => {
   }
 };
 initializeDBandServer();
-const converttodotonormal = (dbObject) => {
-  return {
-    id: id,
-    todo: todo,
-    priority: priority,
-    status: status,
-  };
-};
 const haspriorityAndStatus = (requestQuery) => {
   return (
     requestQuery.priority !== undefined && requestQuery.status !== undefined
@@ -43,16 +35,16 @@ const hasStatusProperty = (requestQuery) => {
 };
 app.get("/todos/", async (request, response) => {
   let data = null;
-  let TodoQuery = "";
+  let getTodoquery = "";
   const { search_q = "", priority, status } = request.query;
   switch (true) {
     case haspriorityAndStatus(request.query):
-      getTodoquery = `select * from todo where todo like '%${search_q}%' and status='${status} and priority='${priority}';`;
+      getTodoquery = `select * from todo where todo like '%${search_q}%' and status='${status}' and priority='${priority}';`;
       break;
-    case hasonlypriority(request.query):
+    case hasPriorityProperty(request.query):
       getTodoquery = `select * from todo where todo like '%${search_q}%' and priority ='${priority}';`;
       break;
-    case hasonlystatus(request.query):
+    case hasStatusProperty(request.query):
       getTodoquery = `select * from todo where todo like '%${search_q}%' and status ='${status}'`;
       break;
     default:
@@ -63,7 +55,7 @@ app.get("/todos/", async (request, response) => {
 });
 app.get("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
-  getsingleQuery = `select * from todo where id=${todoId};`;
+  const getsingleQuery = `select * from todo where id=${todoId};`;
   let single = await db.get(getsingleQuery);
   response.send(single);
 });
@@ -89,12 +81,12 @@ app.put("/todos/:todoId/", async (request, response) => {
       break;
   }
   const oldQuery = `select * from todo where id=${todoId};`;
-  const oldtodo = await db.get(oldtodo);
+  const oldtodo = await db.get(oldQuery);
   const {
     todo = oldtodo.todo,
     priority = oldtodo.priority,
     status = oldtodo.status,
-  } = requestBody;
+  } = request.body;
   const updateTodoQuery = `update todo set todo='${todo}',priority='${priority}',status='${status}' where id='${todoId}'`;
   await db.run(updateTodoQuery);
   response.send(`${updateColumn} updated`);
